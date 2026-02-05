@@ -1,6 +1,6 @@
-# Configuração do Ambiente de Bioinformática com Docker
+# Pipeline Universal de Montagem Genômica Procariótica
 
-Este repositório contém as instruções necessárias para configurar um ambiente Linux isolado no Windows utilizando Docker, garantindo que todas as ferramentas e pipelines de Bioinformática funcionem corretamente, independente do sistema operacional base.
+Este repositório fornece um fluxo de trabalho automatizado para a montagem *de novo* de genomas bacterianos a partir de dados do NCBI SRA, bem como as instruções necessárias para configurar um ambiente Linux isolado no Windows utilizando Docker, garantindo que todas as ferramentas e pipelines de Bioinformática funcionem corretamente, independente do sistema operacional base.
 
 ## Sobre o Ambiente
 A maioria dos pipelines e softwares de Bioinformática é desenvolvida nativamente para **Linux**. Para usuários de Windows ou macOS, utilizamos o **Docker** para executar containers Linux.
@@ -57,6 +57,28 @@ conda config --add channels conda-forge
 # Instalação dos softwares do pipeline
 conda install -c bioconda sra-tools fastqc fastp spades glimmer blast seqkit -y
 pip install quast
+
+#  Montagem de Genoma procarioto
+
+Este repositório fornece um fluxo de trabalho automatizado para a montagem *de novo* de genomas bacterianos a partir de dados do NCBI SRA. 
+
+O script foi desenhado para ser **universal**: você escolhe o microrganismo (Ex: *Bacillus*, *Klebsiella*, *E. coli*), fornece o código de acesso e o pipeline executa todo o processamento, do download à estatística final.
+
+##  Ferramentas e Lógica
+O pipeline integra as ferramentas clássicas da bioinformática (seguindo a metodologia do Prof. Waldeyr Mendes):
+- **Download:** SRA Toolkit
+- **Qualidade:** FastQC & fastp (Filtro rigoroso Q30)
+- **Montagem:** SPAdes (Algoritmo de Grafos de De Bruijn)
+- **Processamento:** SeqKit (Filtro de tamanho > 1000bp)
+- **Validação:** QUAST
+
+##  Como Executar
+1. Certifique-se de que o Docker está rodando com a imagem `waldeyr/bioinfo_basic:v1.0`.
+2. Escolha um código de acesso SRR no [NCBI SRA](https://www.ncbi.nlm.nih.gov/sra).
+3. Execute o script passando o código escolhido:
+
+```bash
+bash pipeline_procarioto.sh SRR36298167
 
 ## Créditos e Referências
 - Ambiente Docker desenvolvido pelo Prof. Waldeyr (imagem `waldeyr/bioinfo_basic:v1.0`).
