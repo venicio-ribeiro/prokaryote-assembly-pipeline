@@ -1,0 +1,15 @@
+# Bloquear arquivos de sequenciamento (pesados)
+*.fastq
+*.fq
+*.gz
+*.sra
+
+# Bloquear pastas de resultados geradas pelo SPAdes e QUAST
+*_assembly/
+quast_results/
+data/
+results/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
