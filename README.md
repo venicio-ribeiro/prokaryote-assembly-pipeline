@@ -1,4 +1,4 @@
-# Pipeline de Montagem e Avaliação de Qualidade de Genomas Procariotos
+# Pipeline de Montagem de novo e Avaliação de Qualidade de Genomas Procariotos
 
 Este repositório fornece um fluxo de trabalho automatizado para a montagem *de novo* de genomas bacterianos a partir de dados do NCBI SRA, bem como as instruções necessárias para configurar um ambiente Linux isolado no Windows utilizando Docker, garantindo que todas as ferramentas e pipelines de Bioinformática funcionem corretamente, independente do sistema operacional base.
 
