@@ -1,4 +1,3 @@
-# # Configuração do Ambiente de Bioinformática com Docker
 # Configuração do Ambiente de Bioinformática com Docker
 
 Este repositório contém as instruções necessárias para configurar um ambiente Linux isolado no Windows utilizando Docker, garantindo que todas as ferramentas e pipelines de Bioinformática funcionem corretamente, independente do sistema operacional base.
