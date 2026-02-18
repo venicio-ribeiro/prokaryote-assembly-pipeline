@@ -73,11 +73,26 @@ O pipeline integra as ferramentas clássicas da bioinformática (seguindo a meto
 - **Validação:** QUAST
 
 ##  Como Executar
-1. Certifique-se de que o Docker está rodando com a imagem `waldeyr/bioinfo_basic:v1.0`.
-2. Escolha um código de acesso SRR no [NCBI SRA](https://www.ncbi.nlm.nih.gov/sra).
-3. Execute o script passando o código escolhido:
+análise:
+1. Clonar o repositório ou acessar a pasta
+Bash
+cd /data
 
-```bash
+2. Baixar as sequências (Dados Brutos)
+Caso o fastq-dump apresente instabilidade, recomenda-se o download manual via FTP (EBI-ENA):
+Bash
+# Exemplo para o acesso SRR36298167
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR362/067/SRR36298167/SRR36298167_1.fastq.gz
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR362/067/SRR36298167/SRR36298167_2.fastq.gz
+
+# Descompactar os arquivos
+gunzip SRR36298167_1.fastq.gz
+gunzip SRR36298167_2.fastq.gz
+
+3. Executar o Pipeline
+Com os arquivos .fastq na pasta, execute o script principal passando o código de acesso como argumento:
+
+Bash
 bash pipeline_procarioto.sh SRR36298167
 
 ## Créditos e Referências
