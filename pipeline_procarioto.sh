@@ -1,44 +1,65 @@
 #!/bin/bash
 
-# Verifica se o usuário passou um código SRR como argumento
-# Exemplo de uso: bash pipeline_universal.sh SRR36298167
-SRR=$1
+# =================================================================
+# PIPELINE: Bacterial Genome Assembly (End-to-End)
+# Autor: Vinícius (Bioinfo Project)
+# Descrição: Download, QC, Trimming e Assembly de genomas bacterianos.
+# =================================================================
 
+SRR=$1
+THREADS=$(nproc) # Detecta automaticamente quantos núcleos usar
+
+# Verificação de entrada
 if [ -z "$SRR" ]; then
-    echo "ERRO: Você precisa fornecer um código SRR."
-    echo "Uso: bash pipeline_universal.sh <CODIGO_SRR>"
+    echo "❌ ERRO: Forneça um código SRR de acesso (Ex: SRR36298167)"
     exit 1
 fi
 
-echo "--- INICIANDO PIPELINE UNIVERSAL PARA: $SRR ---"
+echo "🚀 INICIANDO PIPELINE: $SRR"
+echo "🧵 Usando $THREADS threads"
+echo "----------------------------------------------------"
 
-# 1. Download
-echo "--- ETAPA 1: Baixando as reads do NCBI ---"
-fastq-dump --split-files $SRR
+# --- 1. DOWNLOAD ---
+if [[ -f "${SRR}_1.fastq" ]]; then
+    echo "✅ Arquivos locais detectados."
+else
+    echo "🌐 Baixando dados via fastq-dump..."
+    vdb-config --set /http/timeout/read=10000
+    fastq-dump --split-files "$SRR"
+fi
 
-# 2. Qualidade
-echo "--- ETAPA 2: Verificando qualidade inicial ---"
-fastqc ${SRR}_1.fastq ${SRR}_2.fastq
+# Trava de segurança
+if [ ! -f "${SRR}_1.fastq" ]; then
+    echo "❌ FALHA: Arquivos não encontrados. Verifique a conexão."
+    exit 1
+fi
 
-# 3. Filtragem (Q30)
-echo "--- ETAPA 3: Filtragem de qualidade (FastP) ---"
-fastp -i ${SRR}_1.fastq -I ${SRR}_2.fastq \
-      -o ${SRR}_1_FILTERED.fastq -O ${SRR}_2_FILTERED.fastq \
-      -q 30 -l 50 -e 30
+# --- 2. QUALIDADE (FastQC) ---
+echo "📊 Passo 1: Controle de Qualidade (FastQC)..."
+mkdir -p qc_reports
+fastqc -t "$THREADS" "${SRR}_1.fastq" "${SRR}_2.fastq" -o qc_reports/
 
-# 4. Montagem
-echo "--- ETAPA 4: Montagem do Genoma (SPAdes) ---"
-spades.py --pe1-1 ${SRR}_1_FILTERED.fastq \
-          --pe1-2 ${SRR}_2_FILTERED.fastq \
-          -t 4 --careful --cov-cutoff auto \
-          -o ${SRR}_assembly
+# --- 3. FILTRAGEM (FastP) ---
+echo "✂️ Passo 2: Filtragem de Reads (FastP)..."
+fastp -i "${SRR}_1.fastq" -I "${SRR}_2.fastq" \
+      -o "${SRR}_1_trimmed.fastq" -O "${SRR}_2_trimmed.fastq" \
+      --qualified_quality_phred 30 \
+      --length_required 50 \
+      --html "${SRR}_fastp.html" --json "${SRR}_fastp.json"
 
-# 5. Filtro de Contigs
-echo "--- ETAPA 5: Filtrando contigs < 1000bp ---"
-seqkit seq -m 1000 ${SRR}_assembly/scaffolds.fasta -o genoma_${SRR}_final.fasta
+# --- 4. MONTAGEM (SPAdes) ---
+echo "🏗️ Passo 3: Montagem do Genoma (SPAdes)..."
+# Nota: O SPAdes pode falhar com poucos dados (subsample), mas é ideal para genomas reais.
+spades.py --pe1-1 "${SRR}_1_trimmed.fastq" \
+          --pe1-2 "${SRR}_2_trimmed.fastq" \
+          -t "$THREADS" \
+          --careful \
+          -o "${SRR}_assembly_result"
 
-# 6. Estatísticas
-echo "--- ETAPA 6: Estatísticas Finais (QUAST) ---"
-quast.py genoma_${SRR}_final.fasta
-
-echo "--- PIPELINE CONCLUÍDO PARA O ACESSO $SRR ---"
+# --- 5. FINALIZAÇÃO ---
+echo "----------------------------------------------------"
+if [ -f "${SRR}_assembly_result/contigs.fasta" ]; then
+    echo "🎉 SUCESSO! Genoma montado em: ${SRR}_assembly_result/contigs.fasta"
+else
+    echo "⚠️ Pipeline concluído, mas a montagem falhou (verifique a cobertura dos dados)."
+fi
